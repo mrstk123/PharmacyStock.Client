@@ -6,10 +6,10 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { CheckboxModule } from 'primeng/checkbox';
-import { AuthService } from '../../service/auth.service';
+import { AuthService } from '../../../service/auth.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { LayoutService } from '../../layout/service/layout.service';
+import { LayoutService } from '../../../layout/service/layout.service';
 import { finalize } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -49,7 +49,7 @@ export class Login {
     ) { }
 
     toggleDarkMode() {
-        this.layoutService.layoutConfig.update((state) => ({ ...state, darkTheme: !state.darkTheme }));
+        this.layoutService.layoutConfig.update((state: any) => ({ ...state, darkTheme: !state.darkTheme }));
     }
 
     login() {
@@ -75,7 +75,7 @@ export class Login {
             next: () => {
                 this.router.navigate(['/dashboard']);
             },
-            error: (err) => {
+            error: (err: any) => {
                 const errorMessage = err.error?.message;
 
                 if (errorMessage === 'Incorrect username') {

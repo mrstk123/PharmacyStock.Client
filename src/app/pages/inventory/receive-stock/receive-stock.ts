@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -33,12 +33,13 @@ import { Medicine, Supplier } from '../../../models/models';
         ConfirmDialogModule
     ],
     providers: [MessageService, ConfirmationService],
-    templateUrl: './receive-stock.html'
+    templateUrl: './receive-stock.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReceiveStock implements OnInit {
     stockForm: FormGroup;
-    medicines: Medicine[] = [];
-    suppliers: Supplier[] = [];
+    medicines = signal<Medicine[]>([]);
+    suppliers = signal<Supplier[]>([]);
     loading: boolean = false;
     submitting: boolean = false;
 
@@ -71,7 +72,7 @@ export class ReceiveStock implements OnInit {
         // Load all medicines for the dropdown (using large page size to get all)
         this.medicineService.getMedicines(1, 1000).subscribe({
             next: (data) => {
-                this.medicines = data.items;
+                this.medicines.set(data.items);
             },
             error: (err) => {
                 console.error('Error loading medicines', err);
@@ -83,7 +84,7 @@ export class ReceiveStock implements OnInit {
     loadSuppliers(): void {
         this.supplierService.getSuppliers().subscribe({
             next: (data) => {
-                this.suppliers = data.filter(s => s.isActive);
+                this.suppliers.set(data.filter(s => s.isActive));
             },
             error: (err) => {
                 console.error('Error loading suppliers', err);
@@ -110,31 +111,31 @@ export class ReceiveStock implements OnInit {
         // Check for existing batch
         this.inventoryService.checkBatchExists(medicineId, batchNumber).subscribe({
             next: (existingBatch) => {
-                // Batch exists - Prompt user
-                this.confirmationService.confirm({
-                    message: `Batch "${batchNumber}" already exists for this medicine. Do you want to add stock to it?`,
-                    header: 'Batch Exists',
-                    icon: 'pi pi-exclamation-triangle',
-                    acceptLabel: 'Yes, Add Stock',
-                    rejectLabel: 'Cancel',
-                    acceptButtonStyleClass: 'p-button-warning',
-                    accept: () => {
-                        this.processBatchCreation(formValue, batchNumber);
-                    },
-                    reject: () => {
-                        this.submitting = false;
-                    }
-                });
+                if (existingBatch) {
+                    // Batch exists - Prompt user
+                    this.confirmationService.confirm({
+                        message: `Batch "${batchNumber}" already exists for this medicine. Do you want to add stock to it?`,
+                        header: 'Batch Exists',
+                        icon: 'pi pi-exclamation-triangle',
+                        acceptLabel: 'Yes, Add Stock',
+                        rejectLabel: 'Cancel',
+                        acceptButtonStyleClass: 'p-button-warning',
+                        accept: () => {
+                            this.processBatchCreation(formValue, batchNumber);
+                        },
+                        reject: () => {
+                            this.submitting = false;
+                        }
+                    });
+                } else {
+                    // Batch does not exist (null returned), so we can create it
+                    this.processBatchCreation(formValue, batchNumber);
+                }
             },
             error: (err) => {
-                if (err.status === 404) {
-                    // Batch logic: 404 means it doesn't exist, so we can create it
-                    this.processBatchCreation(formValue, batchNumber);
-                } else {
-                    console.error('Error checking batch', err);
-                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to verify batch uniqueness' });
-                    this.submitting = false;
-                }
+                console.error('Error checking batch', err);
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to verify batch uniqueness' });
+                this.submitting = false;
             }
         });
     }

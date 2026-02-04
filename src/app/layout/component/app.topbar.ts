@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -9,12 +9,14 @@ import { BadgeModule } from 'primeng/badge';
 import { LayoutService } from '../service/layout.service';
 import { AuthService } from '../../service/auth.service';
 import { NotificationService } from '../../service/notification.service';
+import { WebSocketService } from '../../service/websocket.service';
 import { Notification } from '../../models/models';
 
 @Component({
     selector: 'app-topbar',
     standalone: true,
     imports: [RouterModule, CommonModule, MenuModule, PopoverModule, ButtonModule, BadgeModule],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `<div class="layout-topbar">
         <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
             <i class="pi pi-bars"></i>
@@ -30,7 +32,7 @@ import { Notification } from '../../models/models';
             <!-- <div class="layout-topbar-menu">
                 <div class="layout-topbar-menu-content"> -->
                     <button type="button" class="layout-topbar-action" (click)="op.toggle($event)">
-                        <i class="pi pi-inbox" pBadge [value]="unreadCount > 0 ? unreadCount.toString() : ''" [severity]="'danger'"></i>
+                        <i class="pi pi-inbox" pBadge [value]="unreadCount() > 0 ? unreadCount().toString() : ''" [severity]="'danger'"></i>
                         <span>Messages</span>
                     </button>
                     
@@ -47,19 +49,19 @@ import { Notification } from '../../models/models';
                                 </div>
                                 <div class="flex gap-2">
                                     <button pButton 
-                                        [label]="'All (' + notifications.length + ')'" 
-                                        [class]="filter === 'all' ? 'p-button-md p-button-rounded' : 'p-button-md p-button-rounded p-button-text p-button-secondary'" 
-                                        (click)="filter = 'all'"></button>
+                                        [label]="'All (' + notifications().length + ')'" 
+                                        [class]="filter() === 'all' ? 'p-button-md p-button-rounded' : 'p-button-md p-button-rounded p-button-text p-button-secondary'" 
+                                        (click)="filter.set('all')"></button>
                                     <button pButton 
-                                        [label]="'Unread (' + unreadCount + ')'" 
-                                        [class]="filter === 'unread' ? 'p-button-md p-button-rounded' : 'p-button-md p-button-rounded p-button-text p-button-secondary'" 
-                                        (click)="filter = 'unread'"></button>
+                                        [label]="'Unread (' + unreadCount() + ')'" 
+                                        [class]="filter() === 'unread' ? 'p-button-md p-button-rounded' : 'p-button-md p-button-rounded p-button-text p-button-secondary'" 
+                                        (click)="filter.set('unread')"></button>
                                 </div>
                                 <div class="overflow-y-auto" style="max-height: 400px;">
-                                    <div *ngIf="visibleNotifications.length === 0" class="p-4 text-center text-gray-500">
-                                        No {{filter === 'unread' ? 'unread' : ''}} notifications
+                                    <div *ngIf="visibleNotifications().length === 0" class="p-4 text-center text-gray-500">
+                                        No {{filter() === 'unread' ? 'unread' : ''}} notifications
                                     </div>
-                                    <div *ngFor="let notification of visibleNotifications" 
+                                    <div *ngFor="let notification of visibleNotifications()" 
                                         class="p-3 border-bottom-1 surface-border cursor-pointer hover:surface-hover transition-colors transition-duration-150 relative" 
                                         [ngClass]="{
                                             'opacity-70': notification.isRead
@@ -88,15 +90,25 @@ import { Notification } from '../../models/models';
 })
 export class AppTopbar implements OnInit {
     items!: MenuItem[];
-    notifications: Notification[] = [];
-    filter: 'all' | 'unread' = 'all';
+    notifications = signal<Notification[]>([]);
+    filter = signal<'all' | 'unread'>('all');
+
+    unreadCount = computed(() => this.notifications().filter(n => !n.isRead).length);
+
+    visibleNotifications = computed(() => {
+        if (this.filter() === 'unread') {
+            return this.notifications().filter(n => !n.isRead);
+        }
+        return this.notifications();
+    });
 
     @ViewChild('op') popover!: Popover;
 
     constructor(
         public layoutService: LayoutService,
         private authService: AuthService,
-        private notificationService: NotificationService
+        private notificationService: NotificationService,
+        private webSocketService: WebSocketService
     ) { }
 
     ngOnInit() {
@@ -105,25 +117,17 @@ export class AppTopbar implements OnInit {
             this.updateMenu(label);
             if (username) {
                 this.loadNotifications();
+                this.webSocketService.notificationAdded$.subscribe(notification => {
+                    this.notifications.update(current => [notification, ...current]);
+                });
             }
         });
-    }
-
-    get unreadCount(): number {
-        return this.notifications.filter(n => !n.isRead).length;
-    }
-
-    get visibleNotifications(): Notification[] {
-        if (this.filter === 'unread') {
-            return this.notifications.filter(n => !n.isRead);
-        }
-        return this.notifications;
     }
 
     loadNotifications() {
         this.notificationService.getMyNotifications().subscribe({
             next: (data) => {
-                this.notifications = data;
+                this.notifications.set(data);
             },
             error: (err) => {
                 console.error('Error loading notifications:', err);
@@ -140,21 +144,22 @@ export class AppTopbar implements OnInit {
     markAsRead(id: number) {
         this.notificationService.markAsRead(id).subscribe(() => {
             // Optimistic update
-            const note = this.notifications.find(n => n.id === id);
-            if (note) note.isRead = true;
+            this.notifications.update(current =>
+                current.map(n => n.id === id ? { ...n, isRead: true } : n)
+            );
         });
     }
 
     deleteNotification(id: number) {
         this.notificationService.deleteNotification(id).subscribe(() => {
-            this.notifications = this.notifications.filter(n => n.id !== id);
+            this.notifications.update(current => current.filter(n => n.id !== id));
         });
     }
 
     markAllAsRead() {
         this.notificationService.markAllAsRead().subscribe(() => {
             // Mark all notifications as read optimistically
-            this.notifications.forEach(n => n.isRead = true);
+            this.notifications.update(current => current.map(n => ({ ...n, isRead: true })));
         });
     }
 

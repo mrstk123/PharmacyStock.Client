@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { DashboardAlerts, DashboardStats, RecentMovement } from '../models/models';
+import { DashboardAlerts, DashboardStats, RecentMovement, Notification } from '../models/models';
 import { environment } from '../../environments/environment';
 import { LoggingService } from '../core/services/logging.service';
 import { TIMEOUTS } from '../core/constants/app.constants';
@@ -17,6 +17,7 @@ export class WebSocketService {
     public alertsUpdate$ = new Subject<DashboardAlerts>();
     public movementAdded$ = new Subject<RecentMovement>(); // RecentMovementDto maps to RecentMovement
     public notification$ = new Subject<{ message: string; type: string; timestamp: string }>();
+    public notificationAdded$ = new Subject<Notification>();
     public connectionStatus$ = new BehaviorSubject<boolean>(false);
 
     constructor(private loggingService: LoggingService) {
@@ -79,6 +80,10 @@ export class WebSocketService {
 
         this.hubConnection.on('Notification', (data: { message: string; type: string; timestamp: string }) => {
             this.notification$.next(data);
+        });
+
+        this.hubConnection.on('NotificationAdded', (data: Notification) => {
+            this.notificationAdded$.next(data);
         });
     }
 }

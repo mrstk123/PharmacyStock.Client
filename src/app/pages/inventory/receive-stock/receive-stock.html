@@ -8,7 +8,7 @@
             <!-- Medicine Selection -->
             <div class="flex flex-col gap-2">
                 <label for="medicine" class="font-medium">Select Medicine <span class="text-red-500">*</span></label>
-                <p-select id="medicine" [options]="medicines" formControlName="medicineId" optionLabel="name"
+                <p-select id="medicine" [options]="medicines()" formControlName="medicineId" optionLabel="name"
                     optionValue="id" [filter]="true" filterBy="name,medicineCode" placeholder="Search Medicine..."
                     styleClass="w-full" [showClear]="true">
 
@@ -28,7 +28,7 @@
             <!-- Supplier Selection -->
             <div class="flex flex-col gap-2">
                 <label for="supplier" class="font-medium">Select Supplier <span class="text-red-500">*</span></label>
-                <p-select id="supplier" [options]="suppliers" formControlName="supplierId" optionLabel="name"
+                <p-select id="supplier" [options]="suppliers()" formControlName="supplierId" optionLabel="name"
                     optionValue="id" [filter]="true" filterBy="name,supplierCode" placeholder="Search Supplier..."
                     styleClass="w-full" [showClear]="true">
                 </p-select>
