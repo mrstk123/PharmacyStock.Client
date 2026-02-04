@@ -1,0 +1,113 @@
+<div class="card">
+    <div class="flex flex-col gap-4">
+        <h4 class="text-xl font-semibold text-surface-900 dark:text-surface-0">Receive Stock (Stock IN)</h4>
+        <p class="text-surface-500 mb-4">Enter details for new stock batch arrival.</p>
+
+        <form [formGroup]="stockForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Medicine Selection -->
+            <div class="flex flex-col gap-2">
+                <label for="medicine" class="font-medium">Select Medicine <span class="text-red-500">*</span></label>
+                <p-select id="medicine" [options]="medicines" formControlName="medicineId" optionLabel="name"
+                    optionValue="id" [filter]="true" filterBy="name,medicineCode" placeholder="Search Medicine..."
+                    styleClass="w-full" [showClear]="true">
+
+                    <ng-template let-medicine pTemplate="item">
+                        <div class="flex align-items-center gap-2">
+                            <span>{{ medicine.name }}</span>
+                            <span class="text-sm text-surface-500">({{ medicine.medicineCode }})</span>
+                        </div>
+                    </ng-template>
+                </p-select>
+                <small *ngIf="stockForm.get('medicineId')?.invalid && stockForm.get('medicineId')?.touched"
+                    class="text-red-500">
+                    Medicine is required.
+                </small>
+            </div>
+
+            <!-- Supplier Selection -->
+            <div class="flex flex-col gap-2">
+                <label for="supplier" class="font-medium">Select Supplier <span class="text-red-500">*</span></label>
+                <p-select id="supplier" [options]="suppliers" formControlName="supplierId" optionLabel="name"
+                    optionValue="id" [filter]="true" filterBy="name,supplierCode" placeholder="Search Supplier..."
+                    styleClass="w-full" [showClear]="true">
+                </p-select>
+                <small *ngIf="stockForm.get('supplierId')?.invalid && stockForm.get('supplierId')?.touched"
+                    class="text-red-500">
+                    Supplier is required.
+                </small>
+            </div>
+
+            <!-- Batch Number -->
+            <div class="flex flex-col gap-2">
+                <label for="batchNumber" class="font-medium">Batch Number <span class="text-red-500">*</span></label>
+                <input pInputText id="batchNumber" formControlName="batchNumber" placeholder="Enter batch number" />
+                <small *ngIf="stockForm.get('batchNumber')?.invalid && stockForm.get('batchNumber')?.touched"
+                    class="text-red-500">
+                    Batch number is required (min 2 chars).
+                </small>
+            </div>
+
+            <!-- Expiry Date -->
+            <div class="flex flex-col gap-2">
+                <label for="expiryDate" class="font-medium">Expiry Date <span class="text-red-500">*</span></label>
+                <p-datepicker id="expiryDate" formControlName="expiryDate" dateFormat="yy-mm-dd" [showIcon]="true"
+                    placeholder="YYYY-MM-DD" styleClass="w-full">
+                </p-datepicker>
+                <small *ngIf="stockForm.get('expiryDate')?.invalid && stockForm.get('expiryDate')?.touched"
+                    class="text-red-500">
+                    Expiry date is required.
+                </small>
+            </div>
+
+            <!-- Quantity -->
+            <div class="flex flex-col gap-2">
+                <label for="initialQuantity" class="font-medium">Quantity Received <span
+                        class="text-red-500">*</span></label>
+                <p-inputnumber id="initialQuantity" formControlName="initialQuantity" [min]="1" [showButtons]="true"
+                    placeholder="0" styleClass="w-full">
+                </p-inputnumber>
+                <small *ngIf="stockForm.get('initialQuantity')?.invalid && stockForm.get('initialQuantity')?.touched"
+                    class="text-red-500">
+                    Valid quantity is required.
+                </small>
+            </div>
+
+            <!-- Prices -->
+            <div class="flex flex-col gap-2">
+                <label for="purchasePrice" class="font-medium">Purchase Price (Per Unit) <span
+                        class="text-red-500">*</span></label>
+                <p-inputnumber id="purchasePrice" formControlName="purchasePrice" mode="currency" currency="USD"
+                    locale="en-US" [min]="0" placeholder="$0.00" styleClass="w-full">
+                </p-inputnumber>
+                <small *ngIf="stockForm.get('purchasePrice')?.invalid && stockForm.get('purchasePrice')?.touched"
+                    class="text-red-500">
+                    Purchase price is required.
+                </small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="sellingPrice" class="font-medium">Selling Price (Per Unit) <span
+                        class="text-red-500">*</span></label>
+                <p-inputnumber id="sellingPrice" formControlName="sellingPrice" mode="currency" currency="USD"
+                    locale="en-US" [min]="0" placeholder="$0.00" styleClass="w-full">
+                </p-inputnumber>
+                <small *ngIf="stockForm.get('sellingPrice')?.invalid && stockForm.get('sellingPrice')?.touched"
+                    class="text-red-500">
+                    Selling price is required.
+                </small>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="col-span-1 md:col-span-2 flex justify-end gap-3 mt-8">
+                <p-button label="Cancel" icon="pi pi-times" severity="secondary" type="button" (onClick)="onCancel()"
+                    [disabled]="submitting" />
+                <p-button label="Save" icon="pi pi-check" type="submit" [loading]="submitting" severity="success"
+                    [disabled]="stockForm.invalid || submitting" />
+            </div>
+
+        </form>
+    </div>
+</div>
+<p-toast />
+<p-confirmDialog />

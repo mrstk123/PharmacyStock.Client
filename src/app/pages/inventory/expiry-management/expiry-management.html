@@ -1,0 +1,240 @@
+<div class="card">
+    <div>
+        <h4 class="text-xl font-semibold m-0 mb-2 md:mb-0">Expiry Management</h4>
+    </div>
+
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+
+    <p-tabs value="0">
+        <p-tablist>
+            <p-tab value="0">
+                <i class="pi pi-check-circle text-green-500 mr-2"></i>
+                <span class="text-green-500 font-bold">In Date</span>
+            </p-tab>
+            <p-tab value="1">
+                <i class="pi pi-exclamation-triangle text-orange-500 mr-2"></i>
+                <span class="text-orange-500 font-bold">Expiring Soon</span>
+            </p-tab>
+            <p-tab value="2">
+                <i class="pi pi-exclamation-circle text-red-500 mr-2"></i>
+                <span class="text-red-500 font-bold">Expired</span>
+            </p-tab>
+        </p-tablist>
+        <p-tabpanels>
+            <!-- Tab 1: In Date (Normal stocks) -->
+            <p-tabpanel value="0">
+                <p-table [value]="allBatches()" [paginator]="true" [rows]="10" [loading]="loadingAll"
+                    styleClass="p-datatable-gridlines" [rowHover]="true"
+                    [globalFilterFields]="['medicineName', 'batchNumber', 'categoryName']">
+
+
+                    <ng-template #header>
+                        <tr>
+                            <th pSortableColumn="medicineName">Medicine <p-sortIcon field="medicineName"></p-sortIcon>
+                            </th>
+                            <th pSortableColumn="categoryName">Category <p-sortIcon field="categoryName"></p-sortIcon>
+                            </th>
+                            <th pSortableColumn="batchNumber">Batch No. <p-sortIcon field="batchNumber"></p-sortIcon>
+                            </th>
+                            <th pSortableColumn="expiryDate">Expiry Date <p-sortIcon field="expiryDate"></p-sortIcon>
+                            </th>
+                            <th pSortableColumn="daysUntilExpiry">Days Left <p-sortIcon
+                                    field="daysUntilExpiry"></p-sortIcon></th>
+                            <th pSortableColumn="currentQuantity">Quantity <p-sortIcon
+                                    field="currentQuantity"></p-sortIcon>
+                            </th>
+                            <th>Urgency</th>
+                            <th>Actions</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template #body let-batch>
+                        <tr>
+                            <td>{{ batch.medicineName }}</td>
+                            <td>{{ batch.categoryName }}</td>
+                            <td>{{ batch.batchNumber }}</td>
+                            <td>{{ batch.expiryDate | date:'dd/MM/yyyy' }}</td>
+                            <td [class.text-red-600]="batch.daysUntilExpiry < 0"
+                                [class.text-orange-600]="batch.daysUntilExpiry >= 0 && batch.daysUntilExpiry <= 30"
+                                [class.text-yellow-600]="batch.daysUntilExpiry > 30 && batch.daysUntilExpiry <= 90"
+                                [class.text-green-600]="batch.daysUntilExpiry > 90">
+                                {{ batch.daysUntilExpiry }} days
+                            </td>
+                            <td>{{ batch.currentQuantity }}</td>
+                            <td>
+                                <p-tag [value]="batch.expiryStatus"
+                                    [severity]="getSeverity(batch.expiryStatus)"></p-tag>
+                            </td>
+                            <td>
+                                <p-button *ngIf="batch.status === 0" label="Return" icon="pi pi-replay" severity="warn"
+                                    size="small" (onClick)="returnToSupplier(batch)" class="mr-2">
+                                </p-button>
+
+                                <p-button *ngIf="batch.status === 0" label="Quarantine" icon="pi pi-ban"
+                                    severity="danger" size="small" (onClick)="quarantineBatch(batch, true)">
+                                </p-button>
+
+                                <p-button *ngIf="batch.status === 1" label="Return" icon="pi pi-replay" severity="warn"
+                                    size="small" (onClick)="returnToSupplier(batch)" class="mr-2">
+                                </p-button>
+
+                                <p-button *ngIf="batch.status === 1" label="Activate" icon="pi pi-check-circle"
+                                    severity="success" size="small" (onClick)="quarantineBatch(batch, false)">
+                                </p-button>
+
+                                <span *ngIf="batch.status === 2 || batch.status === 3 || batch.status === 4"
+                                    class="text-gray-400 text-sm">
+                                    No actions
+                                </span>
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <ng-template #emptymessage>
+                        <tr>
+                            <td colspan="8" class="text-center p-6">
+                                <div class="flex flex-col items-center justify-center gap-3">
+                                    <i class="pi pi-check-circle text-5xl text-gray-400"></i>
+                                    <span class="text-gray-500 font-medium">No batches found</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </p-tabpanel>
+
+            <!-- Tab 2: Expiring Soon (Yellow Zone) -->
+            <p-tabpanel value="1">
+                <p-table [value]="expiringSoonBatches()" [paginator]="true" [rows]="10" [loading]="loadingExpiringSoon"
+                    styleClass="p-datatable-gridlines" [rowHover]="true">
+
+                    <ng-template #header>
+                        <tr>
+                            <th pSortableColumn="medicineName">Medicine <p-sortIcon field="medicineName"></p-sortIcon>
+                            </th>
+                            <th pSortableColumn="batchNumber">Batch No. <p-sortIcon field="batchNumber"></p-sortIcon>
+                            </th>
+                            <th pSortableColumn="expiryDate">Expiry Date <p-sortIcon field="expiryDate"></p-sortIcon>
+                            </th>
+                            <th pSortableColumn="daysUntilExpiry">Days Left <p-sortIcon
+                                    field="daysUntilExpiry"></p-sortIcon></th>
+                            <th pSortableColumn="currentQuantity">Quantity <p-sortIcon
+                                    field="currentQuantity"></p-sortIcon>
+                            </th>
+                            <th>Urgency</th>
+                            <th>Actions</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template #body let-batch>
+                        <tr>
+                            <td>{{ batch.medicineName }}</td>
+                            <td>{{ batch.batchNumber }}</td>
+                            <td>{{ batch.expiryDate | date:'dd/MM/yyyy' }}</td>
+                            <td [class.text-orange-600]="batch.daysUntilExpiry <= 30"
+                                [class.text-yellow-600]="batch.daysUntilExpiry > 30">
+                                {{ batch.daysUntilExpiry }} days
+                            </td>
+                            <td>{{ batch.currentQuantity }}</td>
+                            <td>
+                                <p-tag [value]="batch.expiryStatus"
+                                    [severity]="getSeverity(batch.expiryStatus)"></p-tag>
+                            </td>
+                            <td>
+                                <p-button label="Return" icon="pi pi-replay" severity="warn" size="small"
+                                    (onClick)="returnToSupplier(batch)" class="mr-2"></p-button>
+
+                                <p-button *ngIf="batch.status === 0" label="Quarantine" icon="pi pi-ban"
+                                    severity="danger" size="small" (onClick)="quarantineBatch(batch, true)">
+                                </p-button>
+
+                                <p-button *ngIf="batch.status === 1" label="Activate" icon="pi pi-check-circle"
+                                    severity="success" size="small" (onClick)="quarantineBatch(batch, false)">
+                                </p-button>
+
+                                <span *ngIf="batch.status === 2 || batch.status === 3 || batch.status === 4"
+                                    class="text-gray-400 text-sm">
+                                    No actions
+                                </span>
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <ng-template #emptymessage>
+                        <tr>
+                            <td colspan="7" class="text-center p-6">
+                                <div class="flex flex-col items-center justify-center gap-3">
+                                    <i class="pi pi-exclamation-triangle text-5xl text-gray-400"></i>
+                                    <span class="text-gray-500 font-medium">No batches expiring soon</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </p-tabpanel>
+
+            <!-- Tab 1: Expired & Unsellable (Red Zone) -->
+            <p-tabpanel value="2">
+                <p-table [value]="expiredBatches()" [paginator]="true" [rows]="10" [loading]="loadingExpired"
+                    styleClass="p-datatable-gridlines" [rowHover]="true">
+
+                    <ng-template #header>
+                        <tr>
+                            <th pSortableColumn="medicineName">Medicine <p-sortIcon field="medicineName"></p-sortIcon>
+                            </th>
+                            <th pSortableColumn="batchNumber">Batch No. <p-sortIcon field="batchNumber"></p-sortIcon>
+                            </th>
+                            <th pSortableColumn="expiryDate">Expiry Date <p-sortIcon field="expiryDate"></p-sortIcon>
+                            </th>
+                            <th pSortableColumn="daysUntilExpiry">Days Overdue <p-sortIcon
+                                    field="daysUntilExpiry"></p-sortIcon></th>
+                            <th pSortableColumn="currentQuantity">Quantity <p-sortIcon
+                                    field="currentQuantity"></p-sortIcon>
+                            </th>
+                            <th>Urgency</th>
+                            <th>Actions</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template #body let-batch>
+                        <tr>
+                            <td>{{ batch.medicineName }}</td>
+                            <td>{{ batch.batchNumber }}</td>
+                            <td>{{ batch.expiryDate | date:'dd/MM/yyyy' }}</td>
+                            <td class="text-red-600 font-bold">{{ Math.abs(batch.daysUntilExpiry) }} days</td>
+                            <td>{{ batch.currentQuantity }}</td>
+                            <td>
+                                <p-tag [value]="batch.expiryStatus"
+                                    [severity]="getSeverity(batch.expiryStatus)"></p-tag>
+                            </td>
+                            <td>
+                                <p-button label="Dispose" icon="pi pi-trash" severity="danger" size="small"
+                                    (onClick)="disposeStock(batch)"></p-button>
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <ng-template #emptymessage>
+                        <tr>
+                            <td colspan="7" class="text-center p-6">
+                                <div class="flex flex-col items-center justify-center gap-3">
+                                    <i class="pi pi-exclamation-circle text-5xl text-gray-400"></i>
+                                    <span class="text-gray-500 font-medium">No expired batches found</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </p-tabpanel>
+
+        </p-tabpanels>
+    </p-tabs>
+</div>
+
+<style>
+    :host ::ng-deep .p-tablist-active-bar {
+        height: 4px !important;
+        /* Make indicator thicker */
+        border-radius: 4px 4px 0 0;
+    }
+
+    /* Enhance active tab text weight */
+    :host ::ng-deep .p-tab-active {
+        font-weight: 800 !important;
+    }
+</style>

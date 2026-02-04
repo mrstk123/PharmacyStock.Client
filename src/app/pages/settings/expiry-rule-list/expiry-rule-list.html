@@ -1,0 +1,131 @@
+<div class="card">
+    <div class="mb-4">
+        <h4 class="m-0 mb-4 text-xl font-semibold">Expiry Rules Management</h4>
+
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+                <p-select [options]="filterCategories" [(ngModel)]="filterCategory" optionLabel="name"
+                    placeholder="Filter by Category" [filter]="true" filterBy="name" [showClear]="true"
+                    (onChange)="applyFilter()" styleClass="w-full md:w-64">
+                </p-select>
+
+                <p-select [options]="statusOptions" [(ngModel)]="selectedStatus" (onChange)="applyFilter()"
+                    placeholder="Select Status" [showClear]="false" styleClass="w-full md:w-40" />
+            </div>
+
+            <div class="w-full md:w-auto">
+                <p-button label="New Rule" icon="pi pi-plus" (onClick)="showDialog()"
+                    styleClass="w-full md:w-auto"></p-button>
+            </div>
+        </div>
+    </div>
+
+    <p-table [value]="filteredRules" [loading]="loading" [rowHover]="true" styleClass="p-datatable-striped"
+        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 20, 50]" [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="categoryName">Category <p-sortIcon field="categoryName"></p-sortIcon></th>
+                <th pSortableColumn="warningDays">Warning Days <p-sortIcon field="warningDays"></p-sortIcon></th>
+                <th pSortableColumn="criticalDays">Critical Days <p-sortIcon field="criticalDays"></p-sortIcon></th>
+                <th pSortableColumn="isActive">Status <p-sortIcon field="isActive"></p-sortIcon></th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rule>
+            <tr>
+                <td>
+                    <span *ngIf="rule.categoryId === null" class="font-bold text-primary">Global Default</span>
+                    <span *ngIf="rule.categoryId !== null">{{ rule.categoryName }}</span>
+                </td>
+                <td>{{ rule.warningDays }} days</td>
+                <td>{{ rule.criticalDays }} days</td>
+                <td>
+                    <p-tag [value]="rule.isActive ? 'Active' : 'Inactive'"
+                        [severity]="rule.isActive ? 'success' : 'danger'" />
+                </td>
+                <td>
+                    <div class="flex gap-2">
+                        <p-button icon="pi pi-pencil" styleClass="p-button-rounded p-button-text"
+                            (onClick)="showDialog(rule)"></p-button>
+                        <p-button icon="pi pi-trash" styleClass="p-button-rounded p-button-text p-button-danger"
+                            (onClick)="confirmDelete(rule)"></p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="5" class="text-center p-4">No expiry rules found.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog [(visible)]="displayDialog" [style]="{width: '600px'}"
+    [header]="isEdit ? 'Edit Expiry Rule' : 'New Expiry Rule'" [modal]="true" class="p-fluid">
+    <!-- Dialog Content -->
+    <ng-template pTemplate="content">
+        <div class="flex flex-col gap-4">
+            <!-- Category Selection -->
+            <div class="field">
+                <label for="category" class="font-bold block mb-2">Category</label>
+                <p-select [options]="categories" [(ngModel)]="selectedCategory" optionLabel="name"
+                    placeholder="Select a Category" [disabled]="isEdit" appendTo="body" [showClear]="true"
+                    styleClass="w-full">
+                    <ng-template let-item pTemplate="item">
+                        <div class="flex align-items-center gap-2">
+                            <span>{{ item.name }}</span>
+                        </div>
+                    </ng-template>
+                </p-select>
+                <small class="text-gray-500 mt-1 block">
+                    <i class="pi pi-info-circle mr-1"></i>
+                    Leave empty to define the <strong>Global Default</strong> rule applied to all unmatched categories.
+                </small>
+            </div>
+
+            <!-- Thresholds Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="field">
+                    <label for="warningDays" class="font-bold block mb-2 text-yellow-600">
+                        <i class="pi pi-exclamation-triangle mr-1"></i> Warning Threshold (Days)
+                    </label>
+                    <p-inputNumber id="warningDays" [(ngModel)]="ruleForm.warningDays" [min]="0" [showButtons]="true"
+                        buttonLayout="horizontal" inputId="warningDays" spinnerMode="horizontal" [step]="1"
+                        decrementButtonClass="p-button-secondary" incrementButtonClass="p-button-secondary"
+                        incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus" styleClass="w-full">
+                    </p-inputNumber>
+                    <small class="text-gray-500 mt-1 block">Items expire soon (Yellow Alert).</small>
+                </div>
+                <div class="field">
+                    <label for="criticalDays" class="font-bold block mb-2 text-red-600">
+                        <i class="pi pi-exclamation-circle mr-1"></i> Critical Threshold (Days)
+                    </label>
+                    <p-inputNumber id="criticalDays" [(ngModel)]="ruleForm.criticalDays" [min]="0" [showButtons]="true"
+                        buttonLayout="horizontal" inputId="criticalDays" spinnerMode="horizontal" [step]="1"
+                        decrementButtonClass="p-button-danger" incrementButtonClass="p-button-danger"
+                        incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus" styleClass="w-full">
+                    </p-inputNumber>
+                    <small class="text-gray-500 mt-1 block">Items almost expired (Red Alert).</small>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="field flex items-center gap-2 mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700"
+                *ngIf="isEdit">
+                <p-checkbox [(ngModel)]="ruleForm.isActive" [binary]="true" inputId="isActive"></p-checkbox>
+                <label for="isActive" class="font-bold cursor-pointer select-none text-gray-900 dark:text-gray-100">Rule
+                    is Active</label>
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <p-button label="Cancel" icon="pi pi-times" styleClass="p-button-text" (onClick)="hideDialog()"></p-button>
+        <p-button label="Save Rule" icon="pi pi-check" styleClass="p-button-primary" (onClick)="saveRule()"></p-button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+<p-toast></p-toast>

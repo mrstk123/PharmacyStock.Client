@@ -1,0 +1,100 @@
+<div class="flex flex-col gap-6">
+    <div class="card">
+        <div class="mb-6">
+            <h4 class="text-xl font-semibold m-0 mb-4">Role Management</h4>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+                    <p-iconfield iconPosition="left" class="w-full md:w-80">
+                        <p-inputicon styleClass="pi pi-search" />
+                        <input pInputText type="text" [(ngModel)]="searchQuery"
+                            (ngModelChange)="dt.filterGlobal($event, 'contains')" placeholder="Search roles..."
+                            class="w-full" />
+                        <p-inputicon *ngIf="searchQuery" styleClass="pi pi-times cursor-pointer"
+                            (click)="clearSearch()" />
+                    </p-iconfield>
+                    <p-select [options]="statusOptions" [(ngModel)]="selectedStatus"
+                        (onChange)="dt.filter($event.value, 'isActive', 'equals')" optionLabel="label"
+                        optionValue="value" [showClear]="false" styleClass="w-full md:w-40" />
+                </div>
+                <div class="w-full md:w-auto">
+                    <p-button label="New Role" icon="pi pi-plus" (onClick)="showCreateRoleDialog()"
+                        styleClass="w-full md:w-auto"></p-button>
+                </div>
+            </div>
+        </div>
+
+        <p-table #dt [value]="roles" [loading]="loading" styleClass="p-datatable-striped" [paginator]="true" [rows]="10"
+            [globalFilterFields]="['name', 'description']" [rowsPerPageOptions]="[10, 20, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
+                    <th pSortableColumn="description">Description <p-sortIcon field="description"></p-sortIcon></th>
+                    <th pSortableColumn="isActive">Status <p-sortIcon field="isActive"></p-sortIcon></th>
+                    <th style="width: 250px">Actions</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-role>
+                <tr>
+                    <td>{{ role.name }}</td>
+                    <td>{{ role.description }}</td>
+                    <td>
+                        <p-tag [value]="role.isActive ? 'Active' : 'Inactive'"
+                            [severity]="role.isActive ? 'success' : 'danger'">
+                        </p-tag>
+                    </td>
+                    <td>
+                        <div class="flex gap-2">
+                            <p-button icon="pi pi-pencil" styleClass="p-button-sm p-button-text" [rounded]="true"
+                                pTooltip="Edit Role" tooltipPosition="top" (onClick)="showEditRoleDialog(role)">
+                            </p-button>
+                            <p-button icon="pi pi-trash" styleClass="p-button-sm p-button-text p-button-danger"
+                                [rounded]="true" pTooltip="Delete Role" tooltipPosition="top"
+                                (onClick)="confirmDelete(role)">
+                            </p-button>
+                            <p-button label="Permissions" icon="pi pi-shield" styleClass="p-button-sm p-button-outlined"
+                                (onClick)="managePermissions(role.id)">
+                            </p-button>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="3" class="text-center p-4">No roles found.</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <!-- Create/Edit Role Dialog -->
+    <p-dialog [header]="dialogHeader" [(visible)]="displayRoleDialog" [modal]="true" [style]="{width: '450px'}">
+        <div class="flex flex-col gap-4 mt-2">
+            <div class="flex flex-col gap-2">
+                <label for="roleName" class="font-semibold">Role Name</label>
+                <input pInputText id="roleName" [(ngModel)]="currentRole.name" class="p-inputtext p-component"
+                    placeholder="e.g. Inventory Manager" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="roleDesc" class="font-semibold">Description</label>
+                <textarea pInputTextarea id="roleDesc" [(ngModel)]="currentRole.description" rows="3"
+                    class="p-inputtextarea p-component" placeholder="Describe the role..."></textarea>
+            </div>
+            <div class="field flex items-center gap-2 mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700"
+                *ngIf="currentRoleId">
+                <p-checkbox [(ngModel)]="currentRole.isActive" [binary]="true" inputId="isActive"></p-checkbox>
+                <label for="isActive" class="font-bold cursor-pointer select-none text-gray-900 dark:text-gray-100">Role
+                    is Active</label>
+            </div>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Cancel" icon="pi pi-times" (onClick)="displayRoleDialog = false"
+                styleClass="p-button-text"></p-button>
+            <p-button [label]="dialogSaveLabel" icon="pi pi-check" (onClick)="saveRole()" [loading]="saving"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+    <p-toast></p-toast>
+</div>

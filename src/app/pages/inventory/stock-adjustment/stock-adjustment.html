@@ -1,0 +1,78 @@
+<div class="flex justify-center p-4">
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+
+    <div class="card w-full max-w-2xl">
+        <h4 class="text-xl font-semibold mb-6">Stock Adjustment</h4>
+        <p class="mb-4 text-gray-500">Manually correct stock levels for specific batches. Logs as 'ADJUSTMENT'.</p>
+
+        <form [formGroup]="adjustmentForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+
+            <!-- Medicine Selection -->
+            <div class="flex flex-col gap-2">
+                <label for="medicine" class="font-semibold">Select Medicine</label>
+                <p-select inputId="medicine" [options]="medicines()" optionLabel="name" formControlName="medicine"
+                    placeholder="Search for a medicine..." [filter]="true" filterBy="name"
+                    (onChange)="onMedicineSelect()" [style]="{'width':'100%'}">
+                </p-select>
+            </div>
+
+            <!-- Batch Selection -->
+            <div class="flex flex-col gap-2">
+                <label for="batch" class="font-semibold">Select Batch</label>
+                <p-select inputId="batch" [options]="batches()" optionLabel="batchNumber" formControlName="batch"
+                    placeholder="Select a batch..." (onChange)="onBatchSelect()" [style]="{'width':'100%'}">
+                    <ng-template let-batch pTemplate="item">
+                        <div class="flex justify-between items-center w-full">
+                            <span>{{ batch.batchNumber }} <span class="text-sm text-gray-500">(Exp: {{batch.expiryDate |
+                                    date:'dd/MM/yyyy'}})</span></span>
+                        </div>
+                    </ng-template>
+                </p-select>
+            </div>
+
+            <!-- Calculation Row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 surface-ground p-4 rounded border surface-border">
+                <div class="flex flex-col">
+                    <span class="text-sm text-surface-500 font-semibold">Current Balance</span>
+                    <span class="text-xl font-mono">{{ currentQuantity() }}</span>
+                </div>
+
+                <div class="flex flex-col">
+                    <span class="text-sm text-surface-500 font-semibold mb-1">New Balance (Physical)</span>
+                    <p-inputnumber formControlName="newQuantity" [min]="0" (onInput)="calculateDiff()"
+                        inputStyleClass="w-full text-center font-bold text-blue-600">
+                    </p-inputnumber>
+                </div>
+
+                <div class="flex flex-col">
+                    <span class="text-sm text-surface-500 font-semibold">Adjustment Qty</span>
+                    <span class="text-xl font-bold"
+                        [ngClass]="{'text-green-600': adjustmentDiff() > 0, 'text-red-600': adjustmentDiff() < 0}">
+                        {{ adjustmentDiff() > 0 ? '+' : '' }}{{ adjustmentDiff() }}
+                    </span>
+                </div>
+            </div>
+
+
+
+            <!-- Reason -->
+            <div class="flex flex-col gap-2">
+                <label for="reason" class="font-semibold">Reason (Mandatory)</label>
+                <input pInputText id="reason" formControlName="reason"
+                    placeholder="e.g. Broken bottle, Counting error" />
+                <small *ngIf="adjustmentForm.get('reason')?.invalid && adjustmentForm.get('reason')?.touched"
+                    class="text-red-500">Reason is required.</small>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3 mt-4">
+                <button pButton type="button" label="Cancel" class="p-button-outlined w-full" routerLink="/inventory">
+                </button>
+                <button pButton type="submit" label="Confirm Adjustment" icon="pi pi-save"
+                    class="p-button-primary w-full" [disabled]="adjustmentForm.invalid || loading()">
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

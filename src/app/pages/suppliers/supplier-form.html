@@ -1,0 +1,68 @@
+<div class="card">
+    <div class="mb-4">
+        <h4 class="text-xl font-semibold text-surface-900 dark:text-surface-0">
+            {{ isEditMode ? 'Edit Supplier' : 'Add New Supplier' }}
+        </h4>
+    </div>
+
+    <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Supplier Code -->
+            <div class="flex flex-col gap-2">
+                <label for="supplierCode" class="font-semibold">
+                    Supplier Code <span class="text-red-500">*</span>
+                </label>
+                <input pInputText id="supplierCode" formControlName="supplierCode" placeholder="Enter supplier code"
+                    [class.ng-invalid]="
+            supplierForm.get('supplierCode')?.invalid &&
+            supplierForm.get('supplierCode')?.touched
+          " />
+                <small class="text-red-500" *ngIf="
+            supplierForm.get('supplierCode')?.invalid &&
+            supplierForm.get('supplierCode')?.touched
+          ">
+                    Supplier code is required
+                </small>
+            </div>
+
+            <!-- Name -->
+            <div class="flex flex-col gap-2">
+                <label for="name" class="font-semibold">
+                    Name <span class="text-red-500">*</span>
+                </label>
+                <input pInputText id="name" formControlName="name" placeholder="Enter supplier name" [class.ng-invalid]="
+            supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched
+          " />
+                <small class="text-red-500"
+                    *ngIf="supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched">
+                    Name is required
+                </small>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="flex flex-col gap-2 md:col-span-2">
+                <label for="contactInfo" class="font-semibold">Contact Info</label>
+                <input pInputText id="contactInfo" formControlName="contactInfo"
+                    placeholder="Enter contact information (phone, email, address)" />
+            </div>
+
+            <!-- Is Active (only in edit mode) -->
+            <div class="flex flex-col gap-2" *ngIf="isEditMode">
+                <label for="isActive" class="font-semibold">Status</label>
+                <div class="flex items-center gap-3">
+                    <p-toggleSwitch id="isActive" formControlName="isActive" />
+                    <span>{{ supplierForm.get('isActive')?.value ? 'Active' : 'Inactive' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-8">
+            <p-button label="Cancel" icon="pi pi-times" severity="secondary" type="button" (onClick)="onCancel()"
+                [disabled]="saving" />
+            <p-button label="Save" icon="pi pi-check" type="submit" [loading]="saving"
+                [disabled]="supplierForm.invalid || saving" />
+        </div>
+    </form>
+</div>
+
+<p-toast />

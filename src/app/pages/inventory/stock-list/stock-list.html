@@ -1,0 +1,164 @@
+<div class="card">
+    <div class="flex flex-col md:flex-row gap-4 mb-4 justify-between items-start md:items-center">
+        <div>
+            <h4 class="text-xl font-semibold m-0 mb-2 md:mb-0">Stock List</h4>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+            <!-- Medicine Filter -->
+            <p-select [options]="medicineOptions" [(ngModel)]="selectedMedicine" optionLabel="medicineName"
+                placeholder="Select Medicine" [filter]="true" filterBy="medicineName" [showClear]="true"
+                (onChange)="applyFilters()" styleClass="w-full sm:w-64">
+            </p-select>
+
+            <!-- Status Filter -->
+            <p-select [options]="statusOptions" [(ngModel)]="selectedStatus" optionLabel="label" optionValue="value"
+                placeholder="Select Status" [showClear]="true" (onChange)="applyFilters()" styleClass="w-full sm:w-48">
+            </p-select>
+
+            <!-- Expiry Range Filter -->
+            <p-datepicker [(ngModel)]="rangeDates" selectionMode="range" [readonlyInput]="true"
+                placeholder="Expiry Date Range" (onSelect)="applyFilters()" [showButtonBar]="true"
+                styleClass="w-full sm:w-56">
+            </p-datepicker>
+
+            <!-- Clear Button -->
+            <button pButton icon="pi pi-filter-slash" class="p-button-outlined" (click)="clearFilters()"
+                pTooltip="Clear All Filters">
+                <span class="ml-2 block sm:hidden">Clear</span>
+            </button>
+
+            <button pButton icon="pi pi-refresh" class="p-button-outlined" (click)="loadBatches()"
+                pTooltip="Reload Data">
+                <span class="ml-2 block sm:hidden">Refresh</span>
+            </button>
+        </div>
+    </div>
+
+    <p-table #dt [value]="batches()" [rows]="10" [paginator]="true"
+        [globalFilterFields]="['medicineName', 'batchNumber', 'supplierName']" [tableStyle]="{ 'min-width': '75rem' }"
+        [rowHover]="true" dataKey="id" currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+        [showCurrentPageReport]="true" [loading]="loading()">
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="medicineName" style="width:20%">
+                    Medicine <p-sortIcon field="medicineName"></p-sortIcon>
+                </th>
+                <th pSortableColumn="batchNumber" style="width:15%">
+                    Batch No. <p-sortIcon field="batchNumber"></p-sortIcon>
+                </th>
+                <th pSortableColumn="supplierName" style="width:15%">
+                    Supplier <p-sortIcon field="supplierName"></p-sortIcon>
+                </th>
+                <th pSortableColumn="expiryDate" style="width:15%">
+                    Expiry Date <p-sortIcon field="expiryDate"></p-sortIcon>
+                </th>
+                <th pSortableColumn="currentQuantity" style="width:10%">
+                    Qty <p-sortIcon field="currentQuantity"></p-sortIcon>
+                </th>
+
+                <th pSortableColumn="sellingPrice" style="width:10%">
+                    Price <p-sortIcon field="sellingPrice"></p-sortIcon>
+                </th>
+                <th style="width:5%">Status</th>
+                <th style="width:5%">Action</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-batch>
+            <tr>
+                <td>
+                    <span class="font-medium">{{ batch.medicineName }}</span>
+                    <i *ngIf="batch.warning" class="pi pi-exclamation-triangle text-orange-500 ml-2"
+                        [pTooltip]="batch.warning" tooltipPosition="top">
+                    </i>
+                </td>
+                <td>{{ batch.batchNumber }}</td>
+                <td>{{ batch.supplierName }}</td>
+                <td>
+                    {{ batch.expiryDate | date:'dd/MM/yyyy' }}
+                </td>
+                <td>
+                    {{ batch.currentQuantity }}
+                    <span class="text-xs text-gray-500">/ {{ batch.initialQuantity }}</span>
+                </td>
+                <td>
+                    <div class="flex flex-col text-sm">
+                        <span class="text-green-600 font-semibold" pTooltip="Selling Price">S: {{ batch.sellingPrice |
+                            currency }}</span>
+                        <span class="text-gray-500" pTooltip="Purchase Price">P: {{ batch.purchasePrice | currency
+                            }}</span>
+                    </div>
+                </td>
+                <td>
+                    <p-tag [value]="getStatusLabel(batch.status)" [severity]="getSeverity(batch.status)">
+                    </p-tag>
+                </td>
+                <td>
+                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                        (onClick)="openEditDialog(batch)" pTooltip="Edit Batch" tooltipPosition="top"
+                        *ngIf="batch.status === 0">
+                    </p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="8" class="text-center p-6">
+                    <div class="flex flex-col items-center justify-center gap-3">
+                        <i class="pi pi-box text-5xl text-gray-400"></i>
+                        <span class="text-gray-500 font-medium">No batches found</span>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+
+
+    <!-- Edit Dialog -->
+    <p-dialog [(visible)]="editDialogVisible" [style]="{width: '450px'}" header="Edit Batch" [modal]="true"
+        styleClass="p-fluid">
+        <ng-template pTemplate="content">
+            <div class="flex flex-col gap-4" *ngIf="selectedBatch">
+                <!-- Read Only Info -->
+                <div class="flex justify-between p-3 surface-ground rounded">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-semibold text-gray-500">Batch No</span>
+                        <span>{{ selectedBatch.batchNumber }}</span>
+                    </div>
+                    <div class="flex flex-col text-right">
+                        <span class="text-sm font-semibold text-gray-500">Qty</span>
+                        <span>{{ selectedBatch.currentQuantity }}</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label for="purchasePrice">Purchase Price</label>
+                        <p-inputnumber [(ngModel)]="editPurchasePrice" mode="currency" currency="USD" locale="en-US"
+                            id="purchasePrice" [min]="0" [autofocus]="true">
+                        </p-inputnumber>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label for="sellingPrice">Selling Price</label>
+                        <p-inputnumber [(ngModel)]="editSellingPrice" mode="currency" currency="USD" locale="en-US"
+                            id="sellingPrice" [min]="0">
+                        </p-inputnumber>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="expiry">Expiry Date</label>
+                    <p-datepicker [(ngModel)]="editExpiryDate" dateFormat="yy-mm-dd" appendTo="body" id="expiry"
+                        [showIcon]="true">
+                    </p-datepicker>
+                </div>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="footer">
+            <p-button label="Cancel" icon="pi pi-times" [text]="true" (onClick)="hideDialog()" />
+            <p-button label="Save" icon="pi pi-check" [text]="true" (onClick)="saveBatch()" [loading]="saving()" />
+        </ng-template>
+    </p-dialog>
+</div>
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>

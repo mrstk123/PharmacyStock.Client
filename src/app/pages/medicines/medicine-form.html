@@ -1,0 +1,237 @@
+<div class="card">
+    <div class="mb-4">
+        <h4 class="text-xl font-semibold text-surface-900 dark:text-surface-0">
+            {{ isEditMode ? 'Edit Medicine' : 'Add New Medicine' }}
+        </h4>
+    </div>
+
+    <form [formGroup]="medicineForm" (ngSubmit)="onSubmit()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Medicine Code -->
+            <div class="flex flex-col gap-2">
+                <label for="medicineCode" class="font-semibold">
+                    Medicine Code <span class="text-red-500">*</span>
+                </label>
+                <input pInputText id="medicineCode" formControlName="medicineCode" placeholder="Enter medicine code"
+                    [class.ng-invalid]="
+            medicineForm.get('medicineCode')?.invalid &&
+            medicineForm.get('medicineCode')?.touched
+          " />
+                <small class="text-red-500" *ngIf="
+            medicineForm.get('medicineCode')?.invalid &&
+            medicineForm.get('medicineCode')?.touched
+          ">
+                    Medicine code is required
+                </small>
+            </div>
+
+            <!-- Name -->
+            <div class="flex flex-col gap-2">
+                <label for="name" class="font-semibold">
+                    Name <span class="text-red-500">*</span>
+                </label>
+                <input pInputText id="name" formControlName="name" placeholder="Enter medicine name" [class.ng-invalid]="
+            medicineForm.get('name')?.invalid && medicineForm.get('name')?.touched
+          " />
+                <small class="text-red-500"
+                    *ngIf="medicineForm.get('name')?.invalid && medicineForm.get('name')?.touched">
+                    Name is required
+                </small>
+            </div>
+
+            <!-- Generic Name -->
+            <div class="flex flex-col gap-2">
+                <label for="genericName" class="font-semibold">Generic Name</label>
+                <input pInputText id="genericName" formControlName="genericName" placeholder="Enter generic name" />
+            </div>
+
+            <!-- Manufacturer -->
+            <div class="flex flex-col gap-2">
+                <label for="manufacturer" class="font-semibold">Manufacturer</label>
+                <input pInputText id="manufacturer" formControlName="manufacturer" placeholder="Enter manufacturer" />
+            </div>
+
+            <!-- Category -->
+            <div class="flex flex-col gap-2">
+                <label for="category" class="font-semibold">
+                    Category <span class="text-red-500">*</span>
+                </label>
+                <p-select id="category" formControlName="categoryId" [options]="categories" optionLabel="name"
+                    optionValue="id" placeholder="Select a category" [loading]="loadingCategories" [class.ng-invalid]="
+            medicineForm.get('categoryId')?.invalid &&
+            medicineForm.get('categoryId')?.touched
+          ">
+                    <ng-template pTemplate="footer">
+                        <div class="p-3 border-t flex flex-col gap-2">
+                            <p-button label="Create New Category" icon="pi pi-plus" [text]="true" size="small"
+                                (onClick)="showCreateCategoryDialog()" styleClass="w-full justify-start" />
+                            <p-button label="Manage Categories" icon="pi pi-cog" [text]="true" size="small"
+                                (onClick)="showManageCategoriesDialog()" styleClass="w-full justify-start" />
+                        </div>
+                    </ng-template>
+                </p-select>
+                <small class="text-red-500" *ngIf="
+            medicineForm.get('categoryId')?.invalid &&
+            medicineForm.get('categoryId')?.touched
+          ">
+                    Category is required
+                </small>
+            </div>
+
+            <!-- Unit of Measure -->
+            <div class="flex flex-col gap-2">
+                <label for="unitOfMeasure" class="font-semibold">
+                    Unit of Measure <span class="text-red-500">*</span>
+                </label>
+                <input pInputText id="unitOfMeasure" formControlName="unitOfMeasure"
+                    placeholder="e.g., Tablet, Bottle, Box" [class.ng-invalid]="
+            medicineForm.get('unitOfMeasure')?.invalid &&
+            medicineForm.get('unitOfMeasure')?.touched
+          " />
+                <small class="text-red-500" *ngIf="
+            medicineForm.get('unitOfMeasure')?.invalid &&
+            medicineForm.get('unitOfMeasure')?.touched
+          ">
+                    Unit of measure is required
+                </small>
+            </div>
+
+            <!-- Storage Condition -->
+            <div class="flex flex-col gap-2">
+                <label for="storageCondition" class="font-semibold">Storage Condition</label>
+                <input pInputText id="storageCondition" formControlName="storageCondition"
+                    placeholder="Enter storage conditions" />
+            </div>
+
+            <!-- Low Stock Threshold -->
+            <div class="flex flex-col gap-2">
+                <label for="lowStockThreshold" class="font-semibold">
+                    Low Stock Threshold <span class="text-red-500">*</span>
+                </label>
+                <input pInputText id="lowStockThreshold" formControlName="lowStockThreshold" type="number"
+                    placeholder="Minimum stock level before alerts" [class.ng-invalid]="
+            medicineForm.get('lowStockThreshold')?.invalid &&
+            medicineForm.get('lowStockThreshold')?.touched
+          " />
+                <small class="text-surface-500">Alert triggers when stock falls below this</small>
+                <small class="text-red-500" *ngIf="
+            medicineForm.get('lowStockThreshold')?.invalid &&
+            medicineForm.get('lowStockThreshold')?.touched
+          ">
+                    Threshold is required (min: 1)
+                </small>
+            </div>
+
+            <!-- Is Active (only in edit mode) -->
+            <div class="flex flex-col gap-2" *ngIf="isEditMode">
+                <label for="isActive" class="font-semibold">Status</label>
+                <div class="flex items-center gap-3">
+                    <p-toggleSwitch id="isActive" formControlName="isActive" />
+                    <span>{{ medicineForm.get('isActive')?.value ? 'Active' : 'Inactive' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-8">
+            <p-button label="Cancel" icon="pi pi-times" severity="secondary" type="button" (onClick)="onCancel()"
+                [disabled]="saving" />
+            <p-button label="Save" icon="pi pi-check" type="submit" [loading]="saving"
+                [disabled]="medicineForm.invalid || saving" />
+        </div>
+    </form>
+</div>
+
+<!-- Create Category Dialog -->
+<p-dialog header="Create New Category" [(visible)]="showCategoryDialog" [modal]="true" [style]="{width: '450px'}">
+    <form [formGroup]="categoryForm" (ngSubmit)="onCreateCategory()">
+        <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-2">
+                <label for="categoryName" class="font-semibold">
+                    Category Name <span class="text-red-500">*</span>
+                </label>
+                <input pInputText id="categoryName" formControlName="name" placeholder="Enter category name"
+                    [class.ng-invalid]="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched" />
+                <small class="text-red-500"
+                    *ngIf="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched">
+                    Category name is required
+                </small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="categoryDescription" class="font-semibold">Description</label>
+                <textarea pInputTextarea id="categoryDescription" formControlName="description" rows="3"
+                    placeholder="Enter description (optional)"></textarea>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-4">
+            <p-button label="Cancel" severity="secondary" type="button" (onClick)="hideCategoryDialog()"
+                [disabled]="savingCategory" />
+            <p-button label="Create" type="submit" [loading]="savingCategory"
+                [disabled]="categoryForm.invalid || savingCategory" />
+        </div>
+    </form>
+</p-dialog>
+
+<!-- Manage Categories Dialog -->
+<p-dialog header="Manage Categories" [(visible)]="showManageDialog" [modal]="true" [style]="{width: '700px'}">
+    <p-table [value]="categories" [loading]="loadingCategories" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+            <tr>
+                <th style="width: 30%">Name</th>
+                <th style="width: 40%">Description</th>
+                <th style="width: 15%">Status</th>
+                <th style="width: 15%">Actions</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-category let-editing="editing" let-ri="rowIndex">
+            <tr>
+                <td>
+                    <input *ngIf="editingCategory?.id === category.id" pInputText [(ngModel)]="editingCategory!.name"
+                        class="w-full" />
+                    <span *ngIf="editingCategory?.id !== category.id">{{ category.name }}</span>
+                </td>
+                <td>
+                    <textarea *ngIf="editingCategory?.id === category.id" pInputTextarea
+                        [(ngModel)]="editingCategory!.description" rows="2" class="w-full"></textarea>
+                    <span *ngIf="editingCategory?.id !== category.id">{{ category.description || '-' }}</span>
+                </td>
+                <td>
+                    <p-toggleSwitch *ngIf="editingCategory?.id === category.id"
+                        [(ngModel)]="editingCategory!.isActive" />
+                    <p-tag *ngIf="editingCategory?.id !== category.id"
+                        [value]="category.isActive ? 'Active' : 'Inactive'"
+                        [severity]="category.isActive ? 'success' : 'danger'" />
+                </td>
+                <td>
+                    <div class="flex gap-2" *ngIf="editingCategory?.id !== category.id">
+                        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" size="small"
+                            (onClick)="startEditCategory(category)" pTooltip="Edit" />
+                        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+                            (onClick)="confirmDeleteCategory(category)" pTooltip="Delete" />
+                    </div>
+                    <div class="flex gap-2" *ngIf="editingCategory?.id === category.id">
+                        <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success" size="small"
+                            (onClick)="saveEditCategory()" pTooltip="Save" [loading]="savingCategory" />
+                        <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary" size="small"
+                            (onClick)="cancelEditCategory()" pTooltip="Cancel" [disabled]="savingCategory" />
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="4" class="text-center py-4">
+                    <span class="text-surface-500">No categories found</span>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+
+    <div class="flex justify-end mt-4">
+        <p-button label="Close" severity="secondary" (onClick)="hideManageDialog()" />
+    </div>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast />

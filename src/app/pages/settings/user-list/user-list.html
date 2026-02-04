@@ -1,0 +1,117 @@
+<div class="flex flex-col gap-6">
+    <div class="card">
+        <div class="mb-6">
+            <h4 class="text-xl font-semibold m-0 mb-4">User Management</h4>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+                    <p-iconfield iconPosition="left" class="w-full md:w-80">
+                        <p-inputicon styleClass="pi pi-search" />
+                        <input pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearch()"
+                            placeholder="Search users..." class="w-full" />
+                        <p-inputicon *ngIf="searchQuery" styleClass="pi pi-times cursor-pointer"
+                            (click)="clearSearch()" />
+                    </p-iconfield>
+                    <p-select [options]="statusOptions" [(ngModel)]="selectedStatus" (onChange)="onStatusChange()"
+                        optionLabel="label" optionValue="value" [showClear]="false" styleClass="w-full md:w-40" />
+                </div>
+                <div class="w-full md:w-auto">
+                    <p-button label="New User" icon="pi pi-plus" (onClick)="showCreateUserDialog()"
+                        styleClass="w-full md:w-auto"></p-button>
+                </div>
+            </div>
+        </div>
+
+        <p-table #dt [value]="filteredUsers" [loading]="loading" styleClass="p-datatable-striped" [paginator]="true"
+            [rows]="10" [rowsPerPageOptions]="[10, 20, 50]" [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th pSortableColumn="username">Username <p-sortIcon field="username"></p-sortIcon></th>
+                    <th pSortableColumn="fullName">Full Name <p-sortIcon field="fullName"></p-sortIcon></th>
+                    <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
+                    <th pSortableColumn="roleName">Role <p-sortIcon field="roleName"></p-sortIcon></th>
+                    <th pSortableColumn="isActive">Status <p-sortIcon field="isActive"></p-sortIcon></th>
+                    <th style="width: 150px">Actions</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-user>
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.fullName }}</td>
+                    <td>{{ user.email }}</td>
+                    <td><p-tag [value]="user.roleName" severity="info"></p-tag></td>
+                    <td>
+                        <p-tag [value]="user.isActive ? 'Active' : 'Inactive'"
+                            [severity]="user.isActive ? 'success' : 'danger'">
+                        </p-tag>
+                    </td>
+                    <td>
+                        <div class="flex gap-2">
+                            <p-button icon="pi pi-pencil" styleClass="p-button-sm p-button-text" [rounded]="true"
+                                pTooltip="Edit User" tooltipPosition="top" (onClick)="showEditUserDialog(user)">
+                            </p-button>
+                            <p-button icon="pi pi-trash" styleClass="p-button-sm p-button-text p-button-danger"
+                                [rounded]="true" pTooltip="Delete User" tooltipPosition="top"
+                                (onClick)="confirmDelete(user)">
+                            </p-button>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="5" class="text-center p-4">No users found.</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <!-- Create/Edit User Dialog -->
+    <p-dialog [header]="dialogHeader" [(visible)]="displayUserDialog" [modal]="true" [style]="{width: '500px'}"
+        class="p-fluid">
+        <div class="flex flex-col gap-4 mt-2">
+            <div class="field">
+                <label for="username" class="font-semibold block mb-2">Username</label>
+                <input pInputText id="username" [(ngModel)]="userForm.username" class="w-full"
+                    [disabled]="!!currentUserId" placeholder="e.g. jdoe" />
+                <small class="text-gray-500" *ngIf="currentUserId">Username cannot be changed.</small>
+            </div>
+
+            <div class="field">
+                <label for="fullName" class="font-semibold block mb-2">Full Name</label>
+                <input pInputText id="fullName" [(ngModel)]="userForm.fullName" class="w-full"
+                    placeholder="e.g. John Doe" />
+            </div>
+
+            <div class="field">
+                <label for="email" class="font-semibold block mb-2">Email</label>
+                <input pInputText id="email" [(ngModel)]="userForm.email" class="w-full"
+                    placeholder="e.g. john@example.com" />
+            </div>
+
+            <div class="field">
+                <label for="role" class="font-semibold block mb-2">Role</label>
+                <p-select [options]="roles" [(ngModel)]="selectedRole" optionLabel="name" placeholder="Select a Role"
+                    styleClass="w-full" appendTo="body"></p-select>
+            </div>
+
+
+
+            <div class="field flex items-center gap-2 mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700"
+                *ngIf="currentUserId">
+                <p-checkbox [(ngModel)]="userForm.isActive" [binary]="true" inputId="isActive"></p-checkbox>
+                <label for="isActive" class="font-bold cursor-pointer select-none text-gray-900 dark:text-gray-100">User
+                    is Active</label>
+            </div>
+
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Cancel" icon="pi pi-times" (onClick)="displayUserDialog = false"
+                styleClass="p-button-text"></p-button>
+            <p-button [label]="dialogSaveLabel" icon="pi pi-check" (onClick)="saveUser()" [loading]="saving"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+    <p-toast></p-toast>
+</div>

@@ -1,0 +1,46 @@
+<div class="flex flex-col gap-6">
+    <div class="card">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-2">
+                <p-button icon="pi pi-arrow-left" styleClass="p-button-text" (onClick)="goBack()"></p-button>
+                <h4 class="text-xl font-semibold m-0" *ngIf="currentRole">Permissions for {{ currentRole.name }}</h4>
+                <h4 class="text-xl font-semibold m-0" *ngIf="!currentRole">Loading Role...</h4>
+            </div>
+            <p-button label="Save Changes" icon="pi pi-save" [disabled]="!currentRole || loading"
+                (onClick)="savePermissions()">
+            </p-button>
+        </div>
+        <p class="text-gray-600 mb-6" *ngIf="currentRole">Manage permissions for <strong>{{ currentRole.name }}</strong>
+            ({{ currentRole.description }}).</p>
+
+        <ng-container *ngIf="currentRole">
+            <hr class="my-6 border-gray-200" />
+
+            <div *ngFor="let group of permissionGroups; let last = last" [class.mb-6]="!last">
+                <h6 class="text-lg font-bold mb-4 text-primary">{{ group.name }}</h6>
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div *ngFor="let perm of group.permissions">
+                        <div class="flex items-start gap-2">
+                            <p-checkbox [value]="perm.id" [(ngModel)]="selectedPermissionIds"
+                                [inputId]="'perm_' + perm.id">
+                            </p-checkbox>
+                            <label [for]="'perm_' + perm.id" class="cursor-pointer">
+                                <span class="font-medium block">{{ perm.name.split('.')[1] }}</span>
+                                <span class="text-sm text-gray-500 mt-1 block">{{ perm.description }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <hr *ngIf="!last" class="my-6 border-gray-200" />
+            </div>
+        </ng-container>
+
+        <div *ngIf="!currentRole && !loading"
+            class="text-center p-8 bg-gray-50 rounded-lg border border-dashed border-gray-300 mt-4">
+            <i class="pi pi-exclamation-circle text-5xl text-gray-400 mb-4"></i>
+            <p class="text-lg text-gray-600">Role not found or ID missing.</p>
+            <p-button label="Go Back" styleClass="mt-4" (onClick)="goBack()"></p-button>
+        </div>
+    </div>
+</div>
+<p-toast></p-toast>
