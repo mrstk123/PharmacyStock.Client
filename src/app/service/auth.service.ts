@@ -12,6 +12,10 @@ export class AuthService {
     private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
     public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
+    get isAuthenticated(): boolean {
+        return this.isAuthenticatedSubject.value;
+    }
+
     // Add user subject
     private currentUserSubject = new BehaviorSubject<string | null>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
@@ -45,9 +49,6 @@ export class AuthService {
     }
 
     refreshToken(): Observable<LoginResponse> {
-        // Refresh token is now handled via cookie automatically by browser on 401 if needed, 
-        // or we can manually call refresh endpoint if we want to force rotation.
-        // However, standard flow is: Interceptor catches 401 -> calls refresh -> retries.
         return this.http.post<LoginResponse>('/auth/refresh', {});
     }
 
