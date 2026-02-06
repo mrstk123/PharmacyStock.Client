@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpParams } from '@angular/common/http';
-import { HttpService } from './http.service';
+import { HttpParams, HttpClient } from '@angular/common/http';
 import { Medicine, CreateMedicine, UpdateMedicine, PaginatedResult } from '../models/models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class MedicineService {
-    private readonly ENDPOINT = '/medicines';
+    private apiUrl = `${environment.apiUrl}/medicines`;
 
-    constructor(private http: HttpService) { }
+    constructor(private http: HttpClient) { }
 
     getMedicines(page: number = 1, pageSize: number = 10, status?: boolean, sortField?: string, sortOrder?: number): Observable<PaginatedResult<Medicine>> {
         let params = new HttpParams()
@@ -29,7 +29,7 @@ export class MedicineService {
             params = params.set('sortOrder', sortOrder.toString());
         }
 
-        return this.http.get<PaginatedResult<Medicine>>(this.ENDPOINT, params);
+        return this.http.get<PaginatedResult<Medicine>>(this.apiUrl, { params });
     }
 
     searchMedicines(query: string, status?: boolean, sortField?: string, sortOrder?: number): Observable<Medicine[]> {
@@ -46,22 +46,22 @@ export class MedicineService {
             params = params.set('sortOrder', sortOrder.toString());
         }
 
-        return this.http.get<Medicine[]>(`${this.ENDPOINT}/search`, params);
+        return this.http.get<Medicine[]>(`${this.apiUrl}/search`, { params });
     }
 
     getMedicineById(id: number): Observable<Medicine> {
-        return this.http.get<Medicine>(`${this.ENDPOINT}/${id}`);
+        return this.http.get<Medicine>(`${this.apiUrl}/${id}`);
     }
 
     createMedicine(medicine: CreateMedicine): Observable<Medicine> {
-        return this.http.post<Medicine>(this.ENDPOINT, medicine);
+        return this.http.post<Medicine>(this.apiUrl, medicine);
     }
 
     updateMedicine(id: number, medicine: UpdateMedicine): Observable<void> {
-        return this.http.put<void>(`${this.ENDPOINT}/${id}`, medicine);
+        return this.http.put<void>(`${this.apiUrl}/${id}`, medicine);
     }
 
     deleteMedicine(id: number): Observable<void> {
-        return this.http.delete<void>(`${this.ENDPOINT}/${id}`);
+        return this.http.delete<void>(`${this.apiUrl}/${id}`);
     }
 }

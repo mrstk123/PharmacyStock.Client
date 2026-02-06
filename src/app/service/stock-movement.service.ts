@@ -1,14 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpParams } from '@angular/common/http';
-import { HttpService } from './http.service';
+import { HttpParams, HttpClient } from '@angular/common/http';
 import { StockMovementDto } from '../models/models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class StockMovementService {
-    constructor(private http: HttpService) { }
+    private apiUrl = `${environment.apiUrl}/stockmovements`;
+
+    constructor(private http: HttpClient) { }
 
     getMovements(startDate?: Date, endDate?: Date, type?: string): Observable<StockMovementDto[]> {
         let params = new HttpParams();
@@ -23,6 +25,6 @@ export class StockMovementService {
             params = params.set('movementType', type);
         }
 
-        return this.http.get<StockMovementDto[]>('/stockmovements/movements', params);
+        return this.http.get<StockMovementDto[]>(`${this.apiUrl}/movements`, { params });
     }
 }

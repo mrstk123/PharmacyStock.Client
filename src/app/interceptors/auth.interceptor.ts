@@ -3,12 +3,18 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../service/auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    // No need to add token header manually; cookies are used.
+    // Add credentials if it's an API request
+    if (req.url.includes(environment.apiUrl) || req.url.startsWith('/api') || req.url.startsWith('http')) {
+        req = req.clone({
+            withCredentials: true
+        });
+    }
 
     return next(req).pipe(
         catchError((error: HttpErrorResponse) => {

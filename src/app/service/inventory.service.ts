@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpService } from './http.service';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import {
     StockCheck,
     MedicineBatch,
@@ -12,54 +12,60 @@ import {
     DispenseResult,
     AlternativeMedicineDto
 } from '../models/models';
-import { HttpParams } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
+@Injectable({
+    providedIn: 'root'
+})
 export class InventoryService {
-    constructor(private http: HttpService) { }
+    private apiUrl = `${environment.apiUrl}/inventory`;
+    private stockOpsUrl = `${environment.apiUrl}/StockOperations`;
+
+    constructor(private http: HttpClient) { }
 
     // Stock Check
     getStockCheck(medicineId: number): Observable<StockCheck> {
-        return this.http.get<StockCheck>(`/inventory/stock-check/${medicineId}`);
+        return this.http.get<StockCheck>(`${this.apiUrl}/stock-check/${medicineId}`);
     }
 
     checkBatchExists(medicineId: number, batchNumber: string): Observable<MedicineBatch> {
-        return this.http.get<MedicineBatch>(`/inventory/check-batch?medicineId=${medicineId}&batchNumber=${batchNumber}`);
+        return this.http.get<MedicineBatch>(`${this.apiUrl}/check-batch?medicineId=${medicineId}&batchNumber=${batchNumber}`);
     }
 
     // Batches
     getBatches(): Observable<MedicineBatch[]> {
-        return this.http.get<MedicineBatch[]>('/inventory/batches');
+        return this.http.get<MedicineBatch[]>(`${this.apiUrl}/batches`);
     }
 
     getBatchById(id: number): Observable<MedicineBatch> {
-        return this.http.get<MedicineBatch>(`/inventory/batches/${id}`);
+        return this.http.get<MedicineBatch>(`${this.apiUrl}/batches/${id}`);
     }
 
     createBatch(batch: CreateMedicineBatch): Observable<MedicineBatch> {
-        return this.http.post<MedicineBatch>('/inventory/batches', batch);
+        return this.http.post<MedicineBatch>(`${this.apiUrl}/batches`, batch);
     }
 
     updateBatch(id: number, batch: UpdateMedicineBatch): Observable<void> {
-        return this.http.put<void>(`/inventory/batches/${id}`, batch);
+        return this.http.put<void>(`${this.apiUrl}/batches/${id}`, batch);
     }
 
     deleteBatch(id: number): Observable<void> {
-        return this.http.delete<void>(`/inventory/batches/${id}`);
+        return this.http.delete<void>(`${this.apiUrl}/batches/${id}`);
     }
 
     previewDispense(medicineId: number, quantity: number): Observable<DispensePreview> {
-        return this.http.post<DispensePreview>('/inventory/dispense/preview', { medicineId, quantity });
+        return this.http.post<DispensePreview>(`${this.apiUrl}/dispense/preview`, { medicineId, quantity });
     }
 
     dispenseStock(dto: { medicineId: number, quantity: number, reason?: string }): Observable<DispenseResult> {
-        return this.http.post<DispenseResult>('/inventory/dispense', dto);
+        return this.http.post<DispenseResult>(`${this.apiUrl}/dispense`, dto);
     }
 
     adjustStock(dto: { batchId: number, newQuantity: number, reason: string }): Observable<any> {
-        return this.http.post<any>('/inventory/adjust', dto);
+        return this.http.post<any>(`${this.apiUrl}/adjust`, dto);
     }
 
     getStockMovements(fromDate?: string, toDate?: string, medicineId?: number, movementType?: string): Observable<StockMovementDto[]> {
@@ -70,33 +76,33 @@ export class InventoryService {
         if (medicineId) params = params.set('medicineId', medicineId.toString());
         if (movementType) params = params.set('movementType', movementType);
 
-        return this.http.get<StockMovementDto[]>('/inventory/movements', params);
+        return this.http.get<StockMovementDto[]>(`${this.apiUrl}/movements`, { params });
     }
 
     getExpiryManagement(status?: string): Observable<ExpiryManagementDto[]> {
         let params = new HttpParams();
         if (status) params = params.set('status', status);
 
-        return this.http.get<ExpiryManagementDto[]>('/inventory/expiry-management', params);
+        return this.http.get<ExpiryManagementDto[]>(`${this.apiUrl}/expiry-management`, { params });
     }
 
     quarantineBatch(batchId: number, quarantine: boolean): Observable<any> {
         // Send raw boolean value as JSON body for ASP.NET Core [FromBody] binding
-        return this.http.patch<any>(`/inventory/batches/${batchId}/quarantine`, quarantine);
+        return this.http.patch<any>(`${this.apiUrl}/batches/${batchId}/quarantine`, quarantine);
     }
 
     disposeExpiredStock(batchId: number, quantity: number, reason: string): Observable<any> {
         const dto = { batchId, quantity, reason };
-        return this.http.post<any>('/StockOperations/remove-expired', dto);
+        return this.http.post<any>(`${this.stockOpsUrl}/remove-expired`, dto);
     }
 
     returnToSupplier(batchId: number, reason: string): Observable<any> {
         const dto = { batchId, reason };
-        return this.http.post<any>('/StockOperations/return-to-supplier', dto);
+        return this.http.post<any>(`${this.stockOpsUrl}/return-to-supplier`, dto);
     }
 
     getAlternatives(medicineId: number): Observable<AlternativeMedicineDto[]> {
-        return this.http.get<AlternativeMedicineDto[]>(`/inventory/alternatives/${medicineId}`);
+        return this.http.get<AlternativeMedicineDto[]>(`${this.apiUrl}/alternatives/${medicineId}`);
     }
 
     // Helper function to get human-readable status label
