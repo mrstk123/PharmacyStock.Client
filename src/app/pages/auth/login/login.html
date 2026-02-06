@@ -44,7 +44,7 @@
                     <input pInputText id="username" name="username" type="text" placeholder="Username"
                         class="w-full md:w-30rem"
                         [ngClass]="{'ng-invalid ng-dirty': usernameError || (usernameInput.invalid && (usernameInput.dirty || usernameInput.touched)), 'mb-8': !usernameError && !(usernameInput.invalid && (usernameInput.dirty || usernameInput.touched)), 'mb-2': usernameError || (usernameInput.invalid && (usernameInput.dirty || usernameInput.touched))}"
-                        [(ngModel)]="username" (keyup.enter)="login()" required #usernameInput="ngModel" />
+                        [(ngModel)]="username" required #usernameInput="ngModel" />
                     <small class="text-red-500 block mb-6" *ngIf="usernameInput.invalid && (usernameInput.dirty || usernameInput.touched)">Username is required</small>
                     <small class="text-red-500 block mb-6" *ngIf="usernameError && !usernameInput.invalid">{{ usernameError }}</small>
 
@@ -52,7 +52,7 @@
                         class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
                     <p-password id="password" name="password" [(ngModel)]="password" placeholder="Password"
                         [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false"
-                        [ngClass]="{'ng-invalid ng-dirty': passwordError || (passwordInput.invalid && (passwordInput.dirty || passwordInput.touched))}" (keyup.enter)="login()" required #passwordInput="ngModel"></p-password>
+                        [ngClass]="{'ng-invalid ng-dirty': passwordError || (passwordInput.invalid && (passwordInput.dirty || passwordInput.touched))}" required #passwordInput="ngModel"></p-password>
                     <small class="text-red-500 block mb-4" *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)">Password is required</small>
                     <small class="text-red-500 block mb-4" *ngIf="passwordError && !passwordInput.invalid">{{ passwordError }}</small>
 
