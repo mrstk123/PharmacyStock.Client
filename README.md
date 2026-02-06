@@ -6,6 +6,17 @@ A comprehensive pharmacy inventory management system built with **Angular 21** a
 ![PrimeNG](https://img.shields.io/badge/PrimeNG-21.0-007ACC?logo=primeng)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)
 
+## 🌐 Live Demo
+
+🚀 **Live Application:** [https://pharmacystock.vercel.app/](https://pharmacystock.vercel.app/)
+
+### 🔑 Demo Credentials
+
+| Role | Username | Password |
+|------|----------|----------|
+| **Admin** | `admin` | `Admin@123` |
+| **Pharmacist** | `pharmacist` | `Pharmacist@123` |
+
 ## 📋 Table of Contents
 
 - [Features](#-features)
@@ -72,6 +83,10 @@ A comprehensive pharmacy inventory management system built with **Angular 21** a
 - Priority-based notifications
 - User-specific and system-wide alerts
 - Integration with dashboard widgets
+
+### 🔗 Related Repositories
+
+- [**Backend Repository (ASP.NET Core)**](https://github.com/mrstk123/PharmacyStock)
 
 ## 🛠 Tech Stack
 
