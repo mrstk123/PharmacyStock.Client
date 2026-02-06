@@ -12,22 +12,22 @@ export class HttpService {
     constructor(private http: HttpClient) { }
 
     get<T>(endpoint: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean> }, headers?: HttpHeaders): Observable<T> {
-        return this.http.get<T>(`${this.baseUrl}${endpoint}`, { params, headers });
+        return this.http.get<T>(`${this.baseUrl}${endpoint}`, { params, headers, withCredentials: true });
     }
 
     post<T>(endpoint: string, body: any, headers?: HttpHeaders): Observable<T> {
-        return this.http.post<T>(`${this.baseUrl}${endpoint}`, body, { headers });
+        return this.http.post<T>(`${this.baseUrl}${endpoint}`, body, { headers, withCredentials: true });
     }
 
     put<T>(endpoint: string, body: any, headers?: HttpHeaders): Observable<T> {
-        return this.http.put<T>(`${this.baseUrl}${endpoint}`, body, { headers });
+        return this.http.put<T>(`${this.baseUrl}${endpoint}`, body, { headers, withCredentials: true });
     }
 
     patch<T>(endpoint: string, body: any, headers?: HttpHeaders): Observable<T> {
-        return this.http.patch<T>(`${this.baseUrl}${endpoint}`, body, { headers });
+        return this.http.patch<T>(`${this.baseUrl}${endpoint}`, body, { headers, withCredentials: true });
     }
 
     delete<T>(endpoint: string, headers?: HttpHeaders): Observable<T> {
-        return this.http.delete<T>(`${this.baseUrl}${endpoint}`, { headers });
+        return this.http.delete<T>(`${this.baseUrl}${endpoint}`, { headers, withCredentials: true });
     }
 }
