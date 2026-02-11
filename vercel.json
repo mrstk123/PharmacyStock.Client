@@ -4,6 +4,14 @@
     "outputDirectory": "dist/PharmacyStock.Client/browser",
     "rewrites": [
         {
+            "source": "/api/(.*)",
+            "destination": "https://pharmacystock.onrender.com/api/$1"
+        },
+        {
+            "source": "/hubs/(.*)",
+            "destination": "https://pharmacystock.onrender.com/hubs/$1"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
